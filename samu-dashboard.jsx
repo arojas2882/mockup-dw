@@ -12,7 +12,6 @@ import {
 
 const LOGO_SRC = "C:/Users/under/Desktop/Trabajo de Título/dashboard/assets"
 
-
 /* =========================================================================
    SAMU METROPOLITANO — Sistema de gestión de datos operacionales
    Prototipo de interfaz (React). Todos los datos son ficticios / simulados.
@@ -284,15 +283,6 @@ function genErrores(n) {
   return rows;
 }
 
-/*
-const ACTIVIDADES_LOG = [
-  "Inicio de Sesión", "Cierre de Sesión", "Ver Dashboard",
-  "Consulta de datos de Traslado Primario", "Consulta de datos de Traslado Secundario",
-  "Consulta de datos de Buzón Intervención", "Consulta de datos de Registro de Llamadas",
-  "Modificación de Datos de Traslado Primario",
-];
-*/
-
 /* ---------- usuarios iniciales del sistema ---------- */
 const INITIAL_USERS = [
   { username: "administrador_tic", correo: "jefe.tic@samu.cl", consulta: false, modificacion: false, isAdmin: true, ultimo: "2026-08-07" },
@@ -444,7 +434,7 @@ function MainMenu({ session, users, go }) {
           <Bell size={18} style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
             <b>{inactivos.length} usuario(s)</b> no han iniciado sesión en más de 30 días: {" "}
-            {inactivos.map(u => u.username).join(", ")}. Revise si corresponde eliminarlos del sistema (RF-012 / RF-013).
+            {inactivos.map(u => u.username).join(", ")}. Revise si corresponde eliminarlos del sistema.
           </div>
         </div>
       )}
@@ -528,7 +518,7 @@ function ConsultarDatos() {
   const tele = useMemo(() => sumTelefonicoRange(dates.length ? dates : [ini]), [ran]);
 
   const tipos = [
-    { key: "primarios", label: "Traslados Primarios" },
+    { key: "primarios", label: "Primarios" },
     { key: "secundarios", label: "Traslados Secundarios" },
     { key: "buzon", label: "Buzón de Intervención" },
     { key: "telefonico", label: "Registro Telefónico" },
@@ -612,7 +602,7 @@ function ConsultarDatos() {
 }
 
 function TablaPrimarios({ rows }) {
-  const head = ["Fecha","BCA","BOR","ACA","AOR","GT 222","Nulos","Tot. Básicas","Tot. Avanzadas","Tot. Fichas Válidas","Tot. Válidas+Nulos","Centro Asist.","Otro Resultado"];
+  const head = ["Fecha","Básicas Centro Asistencial (BCA)","Básicas Otro Resultado (BOR)","Avanzada Centro Asistencial (ACA)","Avanzada Otro Resultado (AOR)","GT 222","Nulos","Totales Básicas","Totales Avanzadas","Total Fichas Válidas","Total Fichas + Nulos","Centro Asist.","Otro Resultado"];
   const csvRows = [head, ...rows.map(r => [fmtDMY(r.date), r.BCA, r.BOR, r.ACA, r.AOR, r.GT222, r.Nulos, r.totBasicas, r.totAvanzadas, r.totValidas, r.totValidasNulos, r.centroAsistencial, r.otroResultado])];
   const remJ = rows.reduce((s,r)=>s+r.BCA+r.BOR+r.ACA+r.AOR+r.GT222,0);
   const remLBasico = rows.reduce((s,r)=>s+r.BCA,0);
@@ -647,7 +637,7 @@ function TablaPrimarios({ rows }) {
 }
 
 function TablaSecundarios({ rows }) {
-  const head = ["Fecha","420","QTA","Sin Registro (SR)","GT 222","Traslado Aéreo (TA)","Nulos","Tot. Fichas+Nulos","Tot. Válidas (REM)"];
+  const head = ["Fecha","420","QTA","SR (Sin Registro)","GT 222","TA (Traslado Aéreo)","Nulos","Totales Fichas + Nulos","Totales Válidas (REM)"];
   const csvRows = [head, ...rows.map(r => [fmtDMY(r.date), r.c420, r.QTA, r.SR, r.GT222, r.TA, r.Nulos, r.totFichasNulos, r.totValidasREM])];
   return (
     <>
@@ -666,7 +656,7 @@ function TablaSecundarios({ rows }) {
 }
 
 function TablaBuzon({ rows }) {
-  const head = ["Móvil","Tipo Ambulancia","Base","Interv. Trasladados","Interv. NST","Tot. Intervenciones","Mov. QTA-OM","Mov. Logística","Tot. Movimientos","Total General"];
+  const head = ["Móvil","Tipo Ambulancia","Base","Interv. Trasladados","Intervención Pacientes No Trasladados (NST)","Tot. Intervenciones","Mov. QTA-OM","Mov. Logística","Tot. Movimientos","Total General"];
   const csvRows = [head, ...rows.map(r => [r.movil, r.tipo, r.base, r.trasladados, r.nst, r.totInt, r.qtaOm, r.logistica, r.totMov, r.totGeneral])];
   return (
     <>
@@ -776,15 +766,16 @@ function TablasTelefonico({ data }) {
 function ModificarDatos({ log }) {
   const [tipo, setTipo] = useState("Traslado Primario");
   const [fecha, setFecha] = useState("2026-06-01");
-  const [campo, setCampo] = useState("BCA");
+  
+  const camposPorTipo = {
+    "Traslado Primario": ["Básicas Centro Asistencial (BCA)","Básicas Otro Resultado (BOR)","Avanzada Centro Asistencial (ACA)","Avanzada Otro Resultado (AOR)","GT 222","Nulos"],
+    "Traslado Secundario": ["420","QTA","SR (Sin Registro)","GT 222","TA (Traslado Aéreo)","Nulos"],
+    "Buzón de Intervención": ["Interv. Trasladados","Intervención Pacientes No Trasladados (NST)","Mov. QTA-OM","Mov. Logística"],
+  };
+  
+  const [campo, setCampo] = useState(camposPorTipo["Traslado Primario"][0]);
   const [nuevoValor, setNuevoValor] = useState("");
   const [resultado, setResultado] = useState(null);
-
-  const camposPorTipo = {
-    "Traslado Primario": ["BCA","BOR","ACA","AOR","GT 222","Nulos"],
-    "Traslado Secundario": ["420","QTA","Sin Registro","GT 222","Traslado Aéreo","Nulos"],
-    "Buzón de Intervención": ["Interv. Trasladados","Interv. NST","Mov. QTA-OM","Mov. Logística"],
-  };
 
   function guardar() {
     if (nuevoValor === "" || isNaN(Number(nuevoValor))) { setResultado({ ok: false, msg: "Debe ingresar un valor numérico válido." }); return; }
@@ -849,8 +840,16 @@ function Dashboard() {
         {tabs.map(t => <div key={t.key} className={`tab ${tab===t.key?"active":""}`} onClick={()=>setTab(t.key)}>{t.label}</div>)}
       </div>
       {tab === "tel" && <DashTelefonico />}
-      {tab === "prim" && <DashTraslados titulo="Traslados Primarios" tipos={["BCA","BOR","ACA","AOR","GT222","Nulos"]} />}
-      {tab === "sec" && <DashTraslados titulo="Traslado Secundario" tipos={["420","QTA","SR","GT222","TA","Nulos"]} />}
+      {tab === "prim" && <DashTraslados 
+        titulo="Traslados Primarios" 
+        tipos={["Básicas Centro Asistencial (BCA)","Básicas Otro Resultado (BOR)","Avanzada Centro Asistencial (ACA)","Avanzada Otro Resultado (AOR)","GT 222","Nulos"]} 
+        totales={["Totales Básicas", "Totales Avanzadas", "Total Fichas Válidas", "Total Fichas + Nulos"]}
+      />}
+      {tab === "sec" && <DashTraslados 
+        titulo="Traslado Secundario" 
+        tipos={["420","QTA","SR (Sin Registro)","GT 222","TA (Traslado Aéreo)","Nulos"]} 
+        totales={["Totales Válidas (REM)", "Totales Fichas + Nulos"]}
+      />}
       {tab === "buz" && <DashBuzon />}
     </div>
   );
@@ -883,7 +882,7 @@ function DashTelefonico() {
       </div>
 
       <div className="card">
-        <div className="disp" style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Llamadas recibidas por mes — año actual vs. año anterior</div>
+        <div className="disp" style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Llamadas recibidas por mes — 2026 vs. 2025</div>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={compMensual}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E6F0" />
@@ -911,54 +910,78 @@ function DashTelefonico() {
   );
 }
 
-function DashTraslados({ titulo, tipos }) {
-  const [sel, setSel] = useState(tipos[0]);
-  const colores = ["#142347","#E8A800","#1E8E5A","#C0362C","#5B6EE8","#8A5BE8"];
+function DashTraslados({ titulo, tipos, totales }) {
+  const allChartOptions = [...tipos, ...totales];
+  const [selChart, setSelChart] = useState(allChartOptions[0]);
+  const [selTable, setSelTable] = useState(tipos[0]);
+  const [year1, setYear1] = useState("2025");
+  const [year2, setYear2] = useState("2026");
+
   const evol = useMemo(() => Array.from({ length: 12 }, (_, i) => {
     const row = { mes: MONTHS[i].slice(0,3) };
-    tipos.forEach(t => row[t] = rnd(200,1400));
-    row.total = tipos.reduce((s,t)=>s+row[t],0);
+    allChartOptions.forEach(t => row[t] = rnd(200,1400));
     return row;
-  }), [titulo]);
+  }), [titulo, allChartOptions]);
+
   const comparativo = useMemo(() => MONTHS.map(m => {
     const anterior = rnd(300,1200), actual = rnd(300,1200);
     return { mes: m, anterior, actual, pct: Math.round((actual-anterior)*1000/anterior)/10 };
-  }), [sel]);
+  }), [selTable, year1, year2]);
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <div className="card">
-        <div className="disp" style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>{titulo} — evolución mensual por tipo</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div className="disp" style={{ fontSize: 15, fontWeight: 700 }}>{titulo} — evolución mensual por tipo</div>
+          <select className="select" style={{ width: 320 }} value={selChart} onChange={e=>setSelChart(e.target.value)}>
+            <optgroup label="Tipos de procedimiento">
+              {tipos.map(t=><option key={t}>{t}</option>)}
+            </optgroup>
+            <optgroup label="Totales">
+              {totales.map(t=><option key={t}>{t}</option>)}
+            </optgroup>
+          </select>
+        </div>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={evol}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E6F0" />
             <XAxis dataKey="mes" fontSize={11} /><YAxis fontSize={11} />
             <RTooltip /><Legend />
-            {tipos.map((t,i)=><Line key={t} type="monotone" dataKey={t} stroke={colores[i%colores.length]} strokeWidth={2} dot={{r:3}} />)}
+            <Line type="monotone" dataKey={selChart} stroke="#142347" strokeWidth={2.5} dot={{r:3}} />
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <div className="card">
-        <div className="disp" style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>{titulo} — total agregado mensual</div>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={evol}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E2E6F0" />
-            <XAxis dataKey="mes" fontSize={11} /><YAxis fontSize={11} />
-            <RTooltip /><Line type="monotone" dataKey="total" name="Total" stroke="#142347" strokeWidth={2.5} dot={{r:3}} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <div className="disp" style={{ fontSize: 15, fontWeight: 700 }}>Tabla comparativa anual</div>
-          <select className="select" style={{ width: 160 }} value={sel} onChange={e=>setSel(e.target.value)}>
+          <select className="select" style={{ width: 320 }} value={selTable} onChange={e=>setSelTable(e.target.value)}>
             {tipos.map(t=><option key={t}>{t}</option>)}
           </select>
         </div>
-        <ExportBar rows={[["Mes","Año anterior","Año actual","% cambio"], ...comparativo.map(c=>[c.mes,c.anterior,c.actual,(isFinite(c.pct)?c.pct+"%":"NA")])]} filenameBase={`comparativo_${titulo.replace(/\s/g,"_")}`} />
+        <ExportBar rows={[["Mes", year1, year2, "% cambio"], ...comparativo.map(c=>[c.mes,c.anterior,c.actual,(isFinite(c.pct)?c.pct+"%":"NA")])]} filenameBase={`comparativo_${titulo.replace(/\s/g,"_")}`} />
         <div className="table-wrap scroll-x">
           <table>
-            <thead><tr><th>Mes</th><th>Año anterior</th><th>Año actual</th><th>% cambio</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>
+                  <select value={year1} onChange={e=>setYear1(e.target.value)} style={{background:"transparent", color:"#fff", border:"1px solid #3A4E85", borderRadius:4, outline:"none", padding: "2px 4px"}}>
+                    <option value="2024" style={{color:"#000"}}>2024</option>
+                    <option value="2025" style={{color:"#000"}}>2025</option>
+                    <option value="2026" style={{color:"#000"}}>2026</option>
+                  </select>
+                </th>
+                <th>
+                  <select value={year2} onChange={e=>setYear2(e.target.value)} style={{background:"transparent", color:"#fff", border:"1px solid #3A4E85", borderRadius:4, outline:"none", padding: "2px 4px"}}>
+                    <option value="2024" style={{color:"#000"}}>2024</option>
+                    <option value="2025" style={{color:"#000"}}>2025</option>
+                    <option value="2026" style={{color:"#000"}}>2026</option>
+                  </select>
+                </th>
+                <th>% cambio</th>
+              </tr>
+            </thead>
             <tbody>{comparativo.map(c=>(
               <tr key={c.mes}><td style={{textAlign:"left"}}>{c.mes}</td><td>{c.anterior}</td><td>{c.actual}</td>
                 <td style={{ color: c.pct>=0 ? "var(--ok)" : "var(--danger)", fontWeight:600 }}>{isFinite(c.pct)?`${c.pct>0?"+":""}${c.pct}%`:"NA"}</td></tr>
@@ -972,14 +995,10 @@ function DashTraslados({ titulo, tipos }) {
 
 function DashBuzon() {
   const [base, setBase] = useState(BASES.filter(b=>b.tipo==="Básica")[0].id);
-  const gen = () =>
-    Array.from(
-      { length: 12 },
-      (_, i) => ({
-        mes: MONTHS[i].slice(0, 3),
-        valor: Math.random() > 0.05 ? rnd(10, 80) : null
-      })
-    );
+  const gen = () => Array.from({ length: 12 }, (_, i) => ({
+    mes: MONTHS[i].slice(0, 3),
+    valor: Math.random() > 0.05 ? rnd(10, 80) : null
+  }));
 
   const trasladados = useMemo(() => gen(), [base]);
   const nst = useMemo(() => gen(), [base]);
@@ -1079,7 +1098,7 @@ function CrearUsuario({ onCreate, forceAdmin, toast }) {
         <input className="input" type={showPw?"text":"password"} value={pw2} onChange={e=>setPw2(e.target.value)} style={{ marginBottom: 14 }} />
 
         {error && <div style={{ color: "var(--danger)", fontSize: 12.5, marginBottom: 10 }}>{error}</div>}
-        <div style={{ fontSize: 11.5, color: "var(--ink-soft)", marginBottom: 14 }}>El usuario se creará sin permisos de consulta ni modificación (RF-004). Un administrador deberá asignarlos.</div>
+        <div style={{ fontSize: 11.5, color: "var(--ink-soft)", marginBottom: 14 }}>El usuario se creará sin permisos de consulta ni modificación. Un administrador deberá asignarlos.</div>
         <button className="btn btn-primary" onClick={submit}><UserPlus size={15}/> {forceAdmin ? "Crear administrador" : "Crear usuario"}</button>
       </div>
     </div>
@@ -1137,7 +1156,7 @@ function ModificarUsuario({ users, onUpdate, sessionUsername, toast }) {
         {u && (
           <>
             <div style={{ fontSize: 13, marginBottom: 10 }}>{u.correo}</div>
-            {isSelf && <div className="alert-banner" style={{ marginBottom: 14 }}><AlertTriangle size={15}/> Un administrador no puede modificar sus propios permisos (RF-009).</div>}
+            {isSelf && <div className="alert-banner" style={{ marginBottom: 14 }}><AlertTriangle size={15}/> Un administrador no puede modificar sus propios permisos.</div>}
             <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, opacity: isSelf?0.5:1 }}>
               <input type="checkbox" checked={u.consulta} disabled={isSelf} onChange={()=>toggle("consulta")} /> Permiso de consulta de datos
             </label>
@@ -1147,7 +1166,7 @@ function ModificarUsuario({ users, onUpdate, sessionUsername, toast }) {
             <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, opacity: isSelf?0.5:1 }}>
               <input type="checkbox" checked={u.isAdmin} disabled={isSelf} onChange={()=>{toggle("isAdmin"); toast(`Privilegios de administrador ${!u.isAdmin?"otorgados a":"revocados de"} ${u.username}.`);}} /> Rol Administrador
             </label>
-            <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>Todos los cambios quedan registrados en la bitácora de auditoría (RNF-005).</div>
+            <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>Todos los cambios quedan registrados en la bitácora de auditoría.</div>
           </>
         )}
       </div>
