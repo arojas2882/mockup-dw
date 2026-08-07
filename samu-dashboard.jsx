@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, Legend, ResponsiveContainer,
@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 import {
   LogOut, ChevronLeft, HelpCircle, Users, UserPlus, UserMinus, UserCog,
   AlertTriangle, ClipboardList, LayoutDashboard, Search, Pencil, Bell,
-  Download, Copy, ShieldCheck, Trash2, Eye, EyeOff, Check, X, Ambulance,
+  Download, Copy, ShieldCheck, Trash2, Eye, EyeOff, Check, X,
 } from "lucide-react";
 
 const LOGO_SRC = "C:/Users/under/Desktop/Trabajo de Título/dashboard/assets"
@@ -284,12 +284,14 @@ function genErrores(n) {
   return rows;
 }
 
+/*
 const ACTIVIDADES_LOG = [
   "Inicio de Sesión", "Cierre de Sesión", "Ver Dashboard",
   "Consulta de datos de Traslado Primario", "Consulta de datos de Traslado Secundario",
   "Consulta de datos de Buzón Intervención", "Consulta de datos de Registro de Llamadas",
   "Modificación de Datos de Traslado Primario",
 ];
+*/
 
 /* ---------- usuarios iniciales del sistema ---------- */
 const INITIAL_USERS = [
@@ -970,11 +972,19 @@ function DashTraslados({ titulo, tipos }) {
 
 function DashBuzon() {
   const [base, setBase] = useState(BASES.filter(b=>b.tipo==="Básica")[0].id);
-  const gen = () => Array.from({ length: 12 }, (_, i) => ({ mes: MONTHS[i].slice(0,3), valor: Math.random()>0.05 ? rnd(10,80) : null }));
-  const trasladados = useMemo(gen, [base]);
-  const nst = useMemo(gen, [base]);
-  const qtaOm = useMemo(gen, [base]);
-  const logistica = useMemo(gen, [base]);
+  const gen = () =>
+    Array.from(
+      { length: 12 },
+      (_, i) => ({
+        mes: MONTHS[i].slice(0, 3),
+        valor: Math.random() > 0.05 ? rnd(10, 80) : null
+      })
+    );
+
+  const trasladados = useMemo(() => gen(), [base]);
+  const nst = useMemo(() => gen(), [base]);
+  const qtaOm = useMemo(() => gen(), [base]);
+  const logistica = useMemo(() => gen(), [base]);
 
   const chart = (data, label, color) => (
     <div className="card">
