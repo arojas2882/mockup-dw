@@ -318,7 +318,7 @@ function Shell({ children, session, onBack, onLogout, showBack, title }) {
           <div style={{ background: "#fff", borderRadius: 8, padding: 4, display: "flex" }}><Logo size={38} /></div>
           <div>
             <div className="disp" style={{ color: "#fff", fontSize: 20, fontWeight: 700, lineHeight: 1 }}>SAMU METROPOLITANO</div>
-            <div style={{ color: "#B9C6E8", fontSize: 11.5, letterSpacing: "0.06em" }}>{title || "SISTEMA DE GESTIÓN DE DATOS OPERACIONALES"}</div>
+            <div style={{ color: "#B9C6E8", fontSize: 11.5, letterSpacing: "0.06em" }}>{title || "SISTEMA DE GESTIÓN DE DATOS ESTADÍSTICOS"}</div>
           </div>
         </div>
         {session && (
@@ -365,7 +365,7 @@ function LoginScreen({ users, onLogin }) {
         <div className="card" style={{ width: 380 }}>
           <div style={{ textAlign: "center", marginBottom: 18 }}>
             <div className="disp" style={{ fontSize: 24, fontWeight: 800 }}>Iniciar sesión</div>
-            <div style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Sistema de Gestión de Datos Operacionales</div>
+            <div style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Sistema de Gestión de Datos Estadísticos</div>
           </div>
 
           <label className="label">Usuario</label>
