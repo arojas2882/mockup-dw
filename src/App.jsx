@@ -10,7 +10,7 @@ import {
   Download, Copy, ShieldCheck, Trash2, Eye, EyeOff, Check, X,
 } from "lucide-react";
 
-const LOGO_SRC = "/logo.png";
+const LOGO_SRC = `${import.meta.env.BASE_URL}logo.png`;
 
 /* =========================================================================
    SAMU METROPOLITANO — Sistema de gestión de datos operacionales
