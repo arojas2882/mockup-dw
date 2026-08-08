@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 import {
   LogOut, ChevronLeft, HelpCircle, Users, UserPlus, UserMinus, UserCog,
   AlertTriangle, ClipboardList, LayoutDashboard, Search, Pencil, Bell,
-  Download, Copy, ShieldCheck, Trash2, Eye, EyeOff, Check, X,
+  Download, Copy, ShieldCheck, Trash2, Eye, EyeOff, Check, X, CalendarDays, Clock3,
 } from "lucide-react";
 
 const LOGO_SRC = `${import.meta.env.BASE_URL}logo.png`;
@@ -315,7 +315,7 @@ function Shell({ children, session, onBack, onLogout, showBack, title }) {
       <div className="hazard" />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px 10px", background: "var(--navy)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ background: "#fff", borderRadius: 8, padding: 4, display: "flex" }}><Logo size={38} /></div>
+          <div style={{ background: "#fff", borderRadius: 8, padding: 5, display: "flex" }}><Logo size={56} /></div>
           <div>
             <div className="disp" style={{ color: "#fff", fontSize: 20, fontWeight: 700, lineHeight: 1 }}>SAMU METROPOLITANO</div>
             <div style={{ color: "#B9C6E8", fontSize: 11.5, letterSpacing: "0.06em" }}>{title || "SISTEMA DE GESTIÓN DE DATOS ESTADÍSTICOS"}</div>
@@ -501,6 +501,16 @@ function ExportBar({ rows, filenameBase }) {
 }
 
 /* ---------- CONSULTAR DATOS ---------- */
+function InputConIcono({ type, style, ...props }) {
+  const Icono = type === "time" ? Clock3 : CalendarDays;
+  return (
+    <div style={{ position: "relative" }}>
+      <input type={type} className="input" {...props} style={{ paddingRight: 34, ...style }} />
+      <Icono size={16} aria-hidden="true" style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--ink-soft)", pointerEvents: "none" }} />
+    </div>
+  );
+}
+
 function ConsultarDatos() {
   const [tipo, setTipo] = useState("primarios");
   const [ini, setIni] = useState("2026-06-01");
@@ -567,21 +577,21 @@ function ConsultarDatos() {
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             <div>
               <label className="label">Fecha de inicio</label>
-              <input type="date" className="input" value={ini} onChange={e => setIni(e.target.value)} />
+              <InputConIcono type="date" value={ini} onChange={e => setIni(e.target.value)} />
             </div>
             <div>
               <label className="label">Fecha de término</label>
-              <input type="date" className="input" value={fin} onChange={e => setFin(e.target.value)} />
+              <InputConIcono type="date" value={fin} onChange={e => setFin(e.target.value)} />
             </div>
             {tipo === "telefonico" && (
               <>
                 <div>
                   <label className="label">Hora inicial (solo registro telefónico)</label>
-                  <input type="time" className="input" value={horaIni} onChange={e => setHoraIni(e.target.value)} />
+                  <InputConIcono type="time" value={horaIni} onChange={e => setHoraIni(e.target.value)} />
                 </div>
                 <div>
                   <label className="label">Hora final (solo registro telefónico)</label>
-                  <input type="time" className="input" value={horaFin} onChange={e => setHoraFin(e.target.value)} />
+                  <InputConIcono type="time" value={horaFin} onChange={e => setHoraFin(e.target.value)} />
                 </div>
               </>
             )}
@@ -853,7 +863,7 @@ function ModificarDatos({ log }) {
         </select>
 
         <label className="label">Fecha</label>
-        <input type="date" className="input" value={fecha} onChange={e => setFecha(e.target.value)} style={{ marginBottom: 14 }} />
+        <InputConIcono type="date" value={fecha} onChange={e => setFecha(e.target.value)} style={{ marginBottom: 14 }} />
 
         <label className="label">Campo / procedimiento</label>
         <select className="select" value={campo} onChange={e => setCampo(e.target.value)} style={{ marginBottom: 14 }}>
@@ -916,9 +926,23 @@ function Dashboard() {
 
 function DashTelefonico() {
   const [mes, setMes] = useState(5);
+  const [year1, setYear1] = useState("2025");
+  const [year2, setYear2] = useState("2026");
   const nivelServicioDias = useMemo(() => Array.from({ length: 30 }, (_, i) => ({ dia: i + 1, valor: Math.min(99, Math.max(55, 82 + rnd(-14,12))) })), [mes]);
-  const compMensual = useMemo(() => MONTHS.map((m,i) => ({ mes: m.slice(0,3), actual: i<=6?rnd(1300,1900):null, anterior: rnd(1200,1850) })), []);
-  const porHora = useMemo(() => Array.from({ length: 24 }, (_, h) => ({ h: `${pad2(h)}:00`, recibidas: rnd(10,110), contestadas: rnd(10,100) })), []);
+  const comparativoAnual = useMemo(() => [
+    { mes: "Enero", 2025: 368, 2026: 1053 }, { mes: "Febrero", 2025: 661, 2026: 1119 },
+    { mes: "Marzo", 2025: 510, 2026: 1098 }, { mes: "Abril", 2025: 699, 2026: 556 },
+    { mes: "Mayo", 2025: 350, 2026: 335 }, { mes: "Junio", 2025: 1080, 2026: 307 },
+    { mes: "Julio", 2025: 528, 2026: 527 },
+  ], []);
+  const compMensual = useMemo(() => MONTHS.map((m, i) => {
+    const fila = comparativoAnual[i];
+    return { mes: m.slice(0,3), actual: fila?.[2026] ?? null, anterior: fila?.[2025] ?? null };
+  }), [comparativoAnual]);
+  const porHora = useMemo(() => Array.from({ length: 24 }, (_, h) => {
+    const recibidas = rnd(10, 110);
+    return { h: `${pad2(h)}:00`, recibidas, contestadas: rnd(Math.round(recibidas * 0.65), recibidas) };
+  }), []);
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
@@ -951,6 +975,28 @@ function DashTelefonico() {
             <Bar dataKey="anterior" name="2025" fill="#142347" />
           </BarChart>
         </ResponsiveContainer>
+      </div>
+
+      <div className="card">
+        <div className="disp" style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Comparativo anual de llamadas totales recibidas al 131</div>
+        <div className="table-wrap scroll-x">
+          <table>
+            <thead><tr>
+              <th>Mes</th>
+              {[year1, year2].map((year, index) => (
+                <th key={index}><select value={year} onChange={e => index === 0 ? setYear1(e.target.value) : setYear2(e.target.value)} style={{ background: "transparent", color: "#fff", border: "1px solid #3A4E85", borderRadius: 4, outline: "none", padding: "2px 4px" }}>
+                  <option value="2025" style={{ color: "#000" }}>2025</option><option value="2026" style={{ color: "#000" }}>2026</option>
+                </select></th>
+              ))}
+              <th>% cambio</th>
+            </tr></thead>
+            <tbody>{comparativoAnual.map(fila => {
+              const inicial = fila[year1], final = fila[year2];
+              const cambio = (final - inicial) * 100 / inicial;
+              return <tr key={fila.mes}><td style={{ textAlign: "left" }}>{fila.mes}</td><td>{inicial}</td><td>{final}</td><td style={{ color: cambio >= 0 ? "var(--ok)" : "var(--danger)", fontWeight: 600 }}>{`${cambio >= 0 ? "+" : ""}${cambio.toFixed(1)}%`}</td></tr>;
+            })}</tbody>
+          </table>
+        </div>
       </div>
 
       <div className="card">
@@ -1056,7 +1102,7 @@ function DashBuzon() {
   const [base, setBase] = useState(BASES.filter(b=>b.tipo==="Básica")[0].id);
   const gen = () => Array.from({ length: 12 }, (_, i) => ({
     mes: MONTHS[i].slice(0, 3),
-    valor: Math.random() > 0.05 ? rnd(10, 80) : null
+    valor: rnd(10, 80)
   }));
 
   const trasladados = useMemo(() => gen(), [base]);
@@ -1071,7 +1117,7 @@ function DashBuzon() {
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E2E6F0" />
           <XAxis dataKey="mes" fontSize={10} /><YAxis fontSize={10} />
-          <RTooltip formatter={(v)=> v===null? "NA": v} /><Line type="monotone" dataKey="valor" stroke={color} strokeWidth={2} dot={{r:3}} connectNulls={false} />
+          <RTooltip /><Line type="monotone" dataKey="valor" stroke={color} strokeWidth={2} dot={{r:3}} />
         </LineChart>
       </ResponsiveContainer>
     </div>
