@@ -528,7 +528,7 @@ function ConsultarDatos() {
     <div>
       <div className="disp" style={{ fontSize: 18, fontWeight: 700, marginBottom: 14 }}>Consultar datos</div>
 
-      <div className="card" style={{ marginBottom: 20 }}>
+      <div className="card" style={{ marginBottom: 20, textAlign: "left"  }}>
         <label className="label">Tipo de dato</label>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
           {tipos.map(t => (
@@ -683,8 +683,50 @@ const IND_HELP = {
   nivelAtencion: "Porcentaje de contestadas contra el total, sin contar no-contestadas antes de 10 s ni perdidas en cola.",
 };
 
+
+
+const COMUNAS_SANTIAGO = [
+  "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba",
+  "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina",
+  "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa",
+  "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura",
+  "Quinta Normal", "Recoleta", "Renca", "San Bernardo", "San Joaquín", "San Miguel",
+  "San Ramón", "Santiago", "Vitacura",
+];
+
+const INDICADORES_COMUNA = [
+  ["totalLlamadas", "Llamadas totales recibidas"], ["contestadas", "Llamadas contestadas"],
+  ["contAntes10", "Llamadas contestadas antes 10 segundos"], ["contAntes20", "Llamadas contestadas antes 20 segundos"],
+  ["contDespues20", "Contestadas después 20 segundos"], ["perdidas", "Perdidas"],
+  ["perdAntes10", "Perdidas antes 10 segundos"], ["perdSobre10", "Perdidas después 10 segundos"],
+  ["perdSobre20", "Perdidas después 20 segundos"], ["perdSobre30", "Perdidas después 30 segundos"],
+  ["perdSobre40", "Perdidas después de 40 segundos"], ["perdSobre50", "Perdidas después 50 segundos"],
+  ["perdSobre60", "Perdidas después 60 segundos"], ["totAbandonadas", "Abandonadas"],
+  ["abanAntes10", "Abandonadas antes 10 segundos"], ["abanSobre10", "Abandonadas después 10 segundos"],
+];
+
+// Distribuye cada total del período sin perder registros: toda columna suma el indicador general.
+function distribuirTotalPorComuna(total, semilla) {
+  const pesos = COMUNAS_SANTIAGO.map((_, i) => 80 + ((i * 37 + semilla * 19) % 73));
+  const sumaPesos = pesos.reduce((s, peso) => s + peso, 0);
+  const partes = pesos.map((peso, i) => {
+    const exacto = total * peso / sumaPesos;
+    return { i, valor: Math.floor(exacto), resto: exacto % 1 };
+  });
+  const pendientes = total - partes.reduce((s, parte) => s + parte.valor, 0);
+  partes.sort((a, b) => b.resto - a.resto || a.i - b.i);
+  for (let i = 0; i < pendientes; i++) partes[i].valor++;
+  return partes.sort((a, b) => a.i - b.i).map(parte => parte.valor);
+}
+
+function construirFilasPorComuna(acc) {
+  const distribuciones = Object.fromEntries(INDICADORES_COMUNA.map(([key], i) => [key, distribuirTotalPorComuna(acc[key], i + 1)]));
+  return COMUNAS_SANTIAGO.map((comuna, i) => ({ comuna, ...Object.fromEntries(INDICADORES_COMUNA.map(([key]) => [key, distribuciones[key][i]])) }));
+}
+
 function TablasTelefonico({ data }) {
   const { days, acc } = data;
+  const filasPorComuna = useMemo(() => construirFilasPorComuna(acc), [acc]);
   const repRows = [
     ["Indicador","Valor"],
     ["Total llamadas", acc.totalLlamadas], ["Llamadas contestadas", acc.contestadas],
@@ -711,6 +753,7 @@ function TablasTelefonico({ data }) {
     const contestadas = Math.round(total * (0.85 + rnd(-8,8)/100));
     return { h, total, contestadas, perdidas: total - contestadas };
   });
+
 
   return (
     <div>
@@ -747,7 +790,6 @@ function TablasTelefonico({ data }) {
           <tr><td style={{textAlign:"left"}}>Abandonadas</td><td>{cortadas.abandonadas}</td></tr>
         </tbody></table>
       </div>
-
       <div className="disp" style={{ fontSize: 15, fontWeight: 700, margin: "22px 0 6px" }}>Desglose por Hora — {fmtDMY(days[days.length-1].date)}</div>
       <ExportBar rows={[["Hora","Total","Contestadas","Perdidas"], ...desgloseHoras.map(r=>[`${pad2(r.h)}:00`, r.total, r.contestadas, r.perdidas])]} filenameBase="registro_telefonico_horas" />
       <div className="table-wrap scroll-x">
@@ -755,6 +797,23 @@ function TablasTelefonico({ data }) {
           <thead><tr><th>Hora</th><th>Total</th><th>Contestadas</th><th>Perdidas</th></tr></thead>
           <tbody>{desgloseHoras.map(r=>(
             <tr key={r.h}><td>{pad2(r.h)}:00</td><td>{r.total}</td><td>{r.contestadas}</td><td>{r.perdidas}</td></tr>
+          ))}</tbody>
+        </table>
+      </div>
+
+      <div className="disp" style={{ fontSize: 15, fontWeight: 700, margin: "22px 0 6px" }}>Indicadores por Comuna — Región Metropolitana</div>
+      <ExportBar
+        rows={[["Comuna", ...INDICADORES_COMUNA.map(([, label]) => label)], ...filasPorComuna.map(fila => [fila.comuna, ...INDICADORES_COMUNA.map(([key]) => fila[key])])]}
+        filenameBase="registro_telefonico_comunas"
+      />
+      <div className="table-wrap scroll-x" style={{ maxHeight: 560, overflowY: "auto" }}>
+        <table>
+          <thead><tr><th>Comuna</th>{INDICADORES_COMUNA.map(([, label]) => <th key={label}>{label}</th>)}</tr></thead>
+          <tbody>{filasPorComuna.map(fila => (
+            <tr key={fila.comuna}>
+              <td style={{ textAlign: "left", fontWeight: 600, whiteSpace: "nowrap" }}>{fila.comuna}</td>
+              {INDICADORES_COMUNA.map(([key]) => <td key={key}>{fila[key]}</td>)}
+            </tr>
           ))}</tbody>
         </table>
       </div>
