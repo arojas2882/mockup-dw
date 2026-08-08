@@ -696,12 +696,12 @@ const IND_HELP = {
 
 
 const COMUNAS_SANTIAGO = [
-  "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba",
+  "Desconocido", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba",
   "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina",
   "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa",
   "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura",
   "Quinta Normal", "Recoleta", "Renca", "San Bernardo", "San Joaquín", "San Miguel",
-  "San Ramón", "Santiago", "Vitacura",
+  "San Ramón", "Santiago", "Vitacura"
 ];
 
 const INDICADORES_COMUNA = [
@@ -1099,25 +1099,66 @@ function DashTraslados({ titulo, tipos, totales }) {
 }
 
 function DashBuzon() {
-  const [base, setBase] = useState(BASES.filter(b=>b.tipo==="Básica")[0].id);
-  const gen = () => Array.from({ length: 12 }, (_, i) => ({
-    mes: MONTHS[i].slice(0, 3),
-    valor: rnd(10, 80)
-  }));
+  const IDS_MOVILES = [
+    "112", "113", "114", "117/137", "119",
+    "126", "127", "131", "133", "134", "135", "136",
+    "139", "140", "142", "143", "144", "145", "146", "147",
+    "148", "149", "150", "151", "152", "153", "154", "155",
+    "156", "157", "158", "159", "160", "161", "162", "163",
+    "164", "166", "167", "168", "169"
+  ];
 
-  const trasladados = useMemo(() => gen(), [base]);
-  const nst = useMemo(() => gen(), [base]);
-  const qtaOm = useMemo(() => gen(), [base]);
-  const logistica = useMemo(() => gen(), [base]);
+  const [movil, setMovil] = useState(IDS_MOVILES[0]);
+
+  const gen = () =>
+    Array.from({ length: 12 }, (_, i) => ({
+      mes: MONTHS[i].slice(0, 3),
+      valor: rnd(10, 80)
+    }));
+
+  const trasladados = useMemo(() => gen(), [movil]);
+  const nst = useMemo(() => gen(), [movil]);
+  const qtaOm = useMemo(() => gen(), [movil]);
+  const logistica = useMemo(() => gen(), [movil]);
 
   const chart = (data, label, color) => (
     <div className="card">
-      <div className="disp" style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>{label}</div>
+      <div
+        className="disp"
+        style={{
+          fontSize: 14,
+          fontWeight: 700,
+          marginBottom: 8
+        }}
+      >
+        {label}
+      </div>
+
       <ResponsiveContainer width="100%" height={170}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#E2E6F0" />
-          <XAxis dataKey="mes" fontSize={10} /><YAxis fontSize={10} />
-          <RTooltip /><Line type="monotone" dataKey="valor" stroke={color} strokeWidth={2} dot={{r:3}} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#E2E6F0"
+          />
+
+          <XAxis
+            dataKey="mes"
+            fontSize={10}
+          />
+
+          <YAxis
+            fontSize={10}
+          />
+
+          <RTooltip />
+
+          <Line
+            type="monotone"
+            dataKey="valor"
+            stroke={color}
+            strokeWidth={2}
+            dot={{ r: 3 }}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -1125,17 +1166,64 @@ function DashBuzon() {
 
   return (
     <div>
-      <div className="card" style={{ marginBottom: 16 }}>
-        <label className="label">Base (básica)</label>
-        <select className="select" style={{ width: 200 }} value={base} onChange={e=>setBase(e.target.value)}>
-          {BASES.filter(b=>b.tipo==="Básica").map(b=><option key={b.id} value={b.id}>{b.id}</option>)}
+      <div
+        className="card"
+        style={{
+          marginBottom: 16
+        }}
+      >
+        <label className="label">
+          Filtrar por ID de móvil
+        </label>
+
+        <select
+          className="select"
+          style={{ width: 200 }}
+          value={movil}
+          onChange={e => setMovil(e.target.value)}
+        >
+          {IDS_MOVILES.map(id => (
+            <option
+              key={id}
+              value={id}
+            >
+              {id}
+            </option>
+          ))}
         </select>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px,1fr))", gap: 16 }}>
-        {chart(trasladados, "Intervenciones — Pacientes Trasladados", "#142347")}
-        {chart(nst, "Intervenciones — No Trasladados (NST)", "#C0362C")}
-        {chart(qtaOm, "Movimientos — Sin Contacto (QTA-OM)", "#E8A800")}
-        {chart(logistica, "Movimientos — Logística", "#1E8E5A")}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(280px,1fr))",
+          gap: 16
+        }}
+      >
+        {chart(
+          trasladados,
+          "Intervenciones — Pacientes Trasladados",
+          "#142347"
+        )}
+
+        {chart(
+          nst,
+          "Intervenciones — No Trasladados (NST)",
+          "#C0362C"
+        )}
+
+        {chart(
+          qtaOm,
+          "Movimientos — Sin Contacto (QTA-OM)",
+          "#E8A800"
+        )}
+
+        {chart(
+          logistica,
+          "Movimientos — Logística",
+          "#1E8E5A"
+        )}
       </div>
     </div>
   );
