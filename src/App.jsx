@@ -511,7 +511,7 @@ function InputConIcono({ type, style, ...props }) {
   );
 }
 
-function ConsultarDatos() {
+function ConsultarDatos({ log }) {
   const [tipo, setTipo] = useState("primarios");
   const [ini, setIni] = useState("2026-06-01");
   const [fin, setFin] = useState("2026-06-07");
@@ -533,6 +533,12 @@ function ConsultarDatos() {
     { key: "buzon", label: "Buzón de Intervención" },
     { key: "telefonico", label: "Registro Telefónico" },
   ];
+
+  const registrarConsulta = () => {
+    const etiqueta = tipos.find(t => t.key === tipo)?.label || tipo;
+    log(`Consulta de datos: ${etiqueta}`);
+    setRan(true);
+  };
 
   return (
     <div>
@@ -598,7 +604,7 @@ function ConsultarDatos() {
           </div>
         )}
 
-        <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setRan(true)}>
+        <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={registrarConsulta}>
           <Search size={15} /> Consultar
         </button>
       </div>
@@ -840,6 +846,7 @@ function ModificarDatos({ log }) {
     "Traslado Primario": ["Básicas Centro Asistencial (BCA)","Básicas Otro Resultado (BOR)","Avanzada Centro Asistencial (ACA)","Avanzada Otro Resultado (AOR)","GT 222","Nulos"],
     "Traslado Secundario": ["420","QTA","SR (Sin Registro)","GT 222","TA (Traslado Aéreo)","Nulos"],
     "Buzón de Intervención": ["Interv. Trasladados","Intervención Pacientes No Trasladados (NST)","Mov. QTA-OM","Mov. Logística"],
+    "Registro Telefónico": ["Total llamadas", "Llamadas contestadas", "Llamadas perdidas", "Total abandonadas"],
   };
   
   const [campo, setCampo] = useState(camposPorTipo["Traslado Primario"][0]);
@@ -1359,7 +1366,7 @@ function ModificarUsuario({ users, onUpdate, sessionUsername, toast }) {
             <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, opacity: isSelf?0.5:1 }}>
               <input type="checkbox" checked={u.isAdmin} disabled={isSelf} onChange={()=>{toggle("isAdmin"); toast(`Privilegios de administrador ${!u.isAdmin?"otorgados a":"revocados de"} ${u.username}.`);}} /> Rol Administrador
             </label>
-            <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>Todos los cambios quedan registrados en la bitácora de auditoría.</div>
+            {/* <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>Todos los cambios quedan registrados en la bitácora de auditoría.</div> */}
           </>
         )}
       </div>
@@ -1484,7 +1491,7 @@ export default function App() {
       <GlobalStyle />
       <Shell session={session} onBack={back} onLogout={handleLogout} showBack={screen !== "main"} title={titleMap[screen]}>
         {screen === "main" && <MainMenu session={session} users={users} go={navGo} />}
-        {screen === "consultar" && <ConsultarDatos />}
+        {screen === "consultar" && <ConsultarDatos log={logAct} />}
         {screen === "dashboard" && <Dashboard />}
         {screen === "modificar" && <ModificarDatos log={logAct} />}
         {screen === "usuarios" && <VerUsuarios users={users} />}
