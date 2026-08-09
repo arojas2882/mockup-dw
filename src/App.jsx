@@ -740,6 +740,64 @@ function construirFilasPorComuna(acc) {
   return COMUNAS_SANTIAGO.map((comuna, i) => ({ comuna, ...Object.fromEntries(INDICADORES_COMUNA.map(([key]) => [key, distribuciones[key][i]])) }));
 }
 
+const TIEMPOS_LLAMADAS_131 = [
+  { categoria: "> 0 s y ≤ 30 s", etiqueta: ["> 0 s", "≤ 30 s"], min: 5, q1: 12, q2: 19, q3: 25, max: 30, media: 19, outliers: [2] },
+  { categoria: "> 30 s y ≤ 60 s", etiqueta: ["> 30 s", "≤ 60 s"], min: 31, q1: 38, q2: 45, q3: 52, max: 59, media: 46, outliers: [60] },
+  { categoria: "> 60 s", etiqueta: ["> 60 s"], min: 62, q1: 74, q2: 92, q3: 122, max: 157, media: 98, outliers: [173, 186] },
+];
+
+function formatoMMSS(segundos) {
+  return `${pad2(Math.floor(segundos / 60))}:${pad2(segundos % 60)}`;
+}
+
+function DiagramaCajasTiempos131() {
+  const ancho = 760, alto = 390, margen = { arriba: 24, derecha: 20, abajo: 70, izquierda: 70 };
+  const maximoEje = 210;
+  const y = valor => margen.arriba + (maximoEje - valor) * (alto - margen.arriba - margen.abajo) / maximoEje;
+  const centros = [220, 410, 600];
+  const ticks = [0, 30, 60, 90, 120, 150, 180, 210];
+  const colorCaja = "#7fc3c2";
+  const colorMedia = "#870c0e";
+
+  return (
+    <div className="card" style={{ marginTop: 22, padding: "18px 16px 12px", overflowX: "auto" }}>
+      <div className="disp" style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>Tiempos de llamadas recibidas al 131</div>
+      <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 10 }}>Distribución por duración de llamada. La línea roja representa la media.</div>
+      <svg viewBox={`0 0 ${ancho} ${alto}`} role="img" aria-label="Tres diagramas de caja y bigotes verticales de tiempos de llamadas recibidas al 131" style={{ display: "block", width: "100%", minWidth: 620, height: "auto" }}>
+        {ticks.map(tick => <g key={tick}>
+          <line x1={margen.izquierda} x2={ancho - margen.derecha} y1={y(tick)} y2={y(tick)} stroke="#DCE1EE" strokeDasharray="3 3" />
+          <text x={margen.izquierda - 10} y={y(tick) + 4} textAnchor="end" fill="#4C5876" fontSize="12">{formatoMMSS(tick)}</text>
+        </g>)}
+        <line x1={margen.izquierda} x2={margen.izquierda} y1={margen.arriba} y2={alto - margen.abajo} stroke="#142347" />
+        <line x1={margen.izquierda} x2={ancho - margen.derecha} y1={alto - margen.abajo} y2={alto - margen.abajo} stroke="#142347" />
+        <text transform={`translate(18 ${(alto - margen.abajo + margen.arriba) / 2}) rotate(-90)`} textAnchor="middle" fill="#142347" fontSize="13" fontWeight="600">Tiempo (mm:ss)</text>
+        {TIEMPOS_LLAMADAS_131.map((item, i) => {
+          const cx = centros[i], anchoCaja = 72, tapa = 18;
+          return <g key={item.categoria}>
+            <line x1={cx} x2={cx} y1={y(item.max)} y2={y(item.q3)} stroke="#142347" strokeWidth="1.5" />
+            <line x1={cx - tapa} x2={cx + tapa} y1={y(item.max)} y2={y(item.max)} stroke="#142347" strokeWidth="1.5" />
+            <line x1={cx} x2={cx} y1={y(item.q1)} y2={y(item.min)} stroke="#142347" strokeWidth="1.5" />
+            <line x1={cx - tapa} x2={cx + tapa} y1={y(item.min)} y2={y(item.min)} stroke="#142347" strokeWidth="1.5" />
+            <rect x={cx - anchoCaja / 2} y={y(item.q3)} width={anchoCaja} height={y(item.q1) - y(item.q3)} fill={colorCaja} fillOpacity="0.82" stroke="#142347" strokeWidth="1.5" />
+            <line x1={cx - anchoCaja / 2} x2={cx + anchoCaja / 2} y1={y(item.q2)} y2={y(item.q2)} stroke="#142347" strokeWidth="2" />
+            <line x1={cx - anchoCaja / 2} x2={cx + anchoCaja / 2} y1={y(item.media)} y2={y(item.media)} stroke={colorMedia} strokeWidth="3" />
+            {item.outliers.map((outlier, j) => <circle key={j} cx={cx + (j ? 12 : 0)} cy={y(outlier)} r="4" fill="#142347" />)}
+            <text x={cx} y={alto - 42} textAnchor="middle" fill="#142347" fontSize="12" fontWeight="600">
+              {item.etiqueta.map((linea, j) => <tspan key={linea} x={cx} dy={j ? 14 : 0}>{linea}</tspan>)}
+            </text>
+          </g>;
+        })}
+        <text x={(margen.izquierda + ancho - margen.derecha) / 2} y={alto - 8} textAnchor="middle" fill="#142347" fontSize="13" fontWeight="600">Categoría de duración</text>
+      </svg>
+      <div style={{ display: "flex", gap: 16, justifyContent: "center", fontSize: 12, color: "var(--ink-soft)", marginTop: 3 }}>
+        <span><i style={{ display: "inline-block", width: 11, height: 11, marginRight: 5, verticalAlign: "-1px", background: colorCaja, border: "1px solid #142347" }} />Caja y bigotes</span>
+        <span><i style={{ display: "inline-block", width: 17, borderTop: `3px solid ${colorMedia}`, marginRight: 5, verticalAlign: "3px" }} />Media</span>
+        <span><i style={{ display: "inline-block", width: 7, height: 7, marginRight: 5, verticalAlign: "1px", borderRadius: "50%", background: "#142347" }} />Outlier</span>
+      </div>
+    </div>
+  );
+}
+
 function TablasTelefonico({ data }) {
   const { days, acc } = data;
   const filasPorComuna = useMemo(() => construirFilasPorComuna(acc), [acc]);
@@ -770,6 +828,11 @@ function TablasTelefonico({ data }) {
     return { h, total, contestadas, perdidas: total - contestadas };
   });
 
+  const resumenTiempos = [
+    ["Categoría", "Primer cuartil", "Segundo cuartil", "Tercer cuartil", "Media", "Mínimo", "Máximo"],
+    ...TIEMPOS_LLAMADAS_131.map(t => [t.categoria, formatoMMSS(t.q1), formatoMMSS(t.q2), formatoMMSS(t.q3), formatoMMSS(t.media), formatoMMSS(t.min), formatoMMSS(t.max)]),
+  ];
+
 
   return (
     <div>
@@ -781,6 +844,16 @@ function TablasTelefonico({ data }) {
         <table><tbody>
           {repRows.slice(1).map(([k,v]) => <tr key={k}><td style={{textAlign:"left", fontWeight:600}}>{k}</td><td>{v}</td></tr>)}
         </tbody></table>
+      </div>
+
+      <DiagramaCajasTiempos131 />
+      <div className="disp" style={{ fontSize: 15, fontWeight: 700, margin: "22px 0 6px" }}>Resumen estadístico — tiempos de llamadas al 131</div>
+      <ExportBar rows={resumenTiempos} filenameBase="registro_telefonico_tiempos_131" />
+      <div className="table-wrap scroll-x">
+        <table>
+          <thead><tr>{resumenTiempos[0].map(encabezado => <th key={encabezado}>{encabezado}</th>)}</tr></thead>
+          <tbody>{resumenTiempos.slice(1).map(fila => <tr key={fila[0]}>{fila.map((celda, i) => <td key={i} style={i === 0 ? { textAlign: "left", fontWeight: 600 } : undefined}>{celda}</td>)}</tr>)}</tbody>
+        </table>
       </div>
 
       <div className="disp" style={{ fontSize: 15, fontWeight: 700, margin: "22px 0 6px" }}>Indicadores por Usuario (CCKALL)</div>
