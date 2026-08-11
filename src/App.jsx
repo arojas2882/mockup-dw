@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, Legend, ResponsiveContainer,
@@ -502,11 +502,31 @@ function ExportBar({ rows, filenameBase }) {
 
 /* ---------- CONSULTAR DATOS ---------- */
 function InputConIcono({ type, style, ...props }) {
+  const inputRef = useRef(null);
   const Icono = type === "time" ? Clock3 : CalendarDays;
+
+  function abrirSelector() {
+    const input = inputRef.current;
+    if (!input) return;
+
+    input.focus();
+    // showPicker abre el selector nativo cuando el navegador lo admite.
+    // El click es el respaldo para navegadores que no lo implementan.
+    if (typeof input.showPicker === "function") input.showPicker();
+    else input.click();
+  }
+
   return (
     <div style={{ position: "relative" }}>
-      <input type={type} className="input" {...props} style={{ paddingRight: 34, ...style }} />
-      <Icono size={16} aria-hidden="true" style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--ink-soft)", pointerEvents: "none" }} />
+      <input ref={inputRef} type={type} className="input" {...props} style={{ paddingRight: 38, ...style }} />
+      <button
+        type="button"
+        aria-label={type === "time" ? "Abrir selector de hora" : "Abrir selector de fecha"}
+        onClick={abrirSelector}
+        style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", display: "grid", placeItems: "center", width: 30, height: 30, padding: 0, border: 0, background: "transparent", color: "var(--ink-soft)", cursor: "pointer" }}
+      >
+        <Icono size={16} aria-hidden="true" />
+      </button>
     </div>
   );
 }
