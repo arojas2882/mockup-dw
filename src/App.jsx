@@ -701,13 +701,15 @@ const IND_HELP = {
 
 
 
-const COMUNAS_SANTIAGO = [
+const COMUNAS_RM = [
   "Desconocido", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba",
   "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina",
   "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa",
   "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Puente Alto", "Quilicura",
   "Quinta Normal", "Recoleta", "Renca", "San Bernardo", "San Joaquín", "San Miguel",
-  "San Ramón", "Santiago", "Vitacura"
+  "San Ramón", "Santiago", "Vitacura", "Pirque", "San José de Maipo", "Colina", "Lampa",
+  "Tiltil", "Buin", "Calera de Tango", "Paine", "Alhué", "Curacaví", "María Pinto",
+  "Melipilla", "San Pedro", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor", "Talagante"
 ];
 
 const INDICADORES_COMUNA = [
@@ -723,7 +725,7 @@ const INDICADORES_COMUNA = [
 
 // Distribuye cada total del período sin perder registros: toda columna suma el indicador general.
 function distribuirTotalPorComuna(total, semilla) {
-  const pesos = COMUNAS_SANTIAGO.map((_, i) => 80 + ((i * 37 + semilla * 19) % 73));
+  const pesos = COMUNAS_RM.map((_, i) => 80 + ((i * 37 + semilla * 19) % 73));
   const sumaPesos = pesos.reduce((s, peso) => s + peso, 0);
   const partes = pesos.map((peso, i) => {
     const exacto = total * peso / sumaPesos;
@@ -737,7 +739,7 @@ function distribuirTotalPorComuna(total, semilla) {
 
 function construirFilasPorComuna(acc) {
   const distribuciones = Object.fromEntries(INDICADORES_COMUNA.map(([key], i) => [key, distribuirTotalPorComuna(acc[key], i + 1)]));
-  return COMUNAS_SANTIAGO.map((comuna, i) => ({ comuna, ...Object.fromEntries(INDICADORES_COMUNA.map(([key]) => [key, distribuciones[key][i]])) }));
+  return COMUNAS_RM.map((comuna, i) => ({ comuna, ...Object.fromEntries(INDICADORES_COMUNA.map(([key]) => [key, distribuciones[key][i]])) }));
 }
 
 const TIEMPOS_LLAMADAS_131 = [
