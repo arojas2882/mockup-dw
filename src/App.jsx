@@ -219,9 +219,10 @@ const BASES = [
   { id: "B12", tipo: "Básica" }, { id: "B20", tipo: "Básica" }, { id: "B07", tipo: "Avanzada" },
   { id: "B15", tipo: "Básica" }, { id: "B03", tipo: "Avanzada" }, { id: "B18", tipo: "Básica" },
 ];
+const MOVILES_BUZON = ["101", "108", "115", "122", "129", "136"];
 function genBuzonRows() {
   return BASES.map((b, i) => {
-    const movil = 100 + i * 7 + rnd(1, 6);
+    const movil = MOVILES_BUZON[i];
     const trasladados = rnd(10,80), nst = rnd(10,80);
     const qtaOm = rnd(10,80), logistica = rnd(10,80);
     const totInt = trasladados + nst, totMov = qtaOm + logistica;
@@ -286,7 +287,7 @@ function genErrores(n) {
 /* ---------- usuarios iniciales del sistema ---------- */
 const INITIAL_USERS = [
   { username: "administrador_tic", correo: "jefe.tic@samu.cl", consulta: false, modificacion: false, isAdmin: true, ultimo: "2026-08-07" },
-  { username: "estadistica_samu", correo: "estadistica@samu.cl", consulta: true, modificacion: false, isAdmin: false, ultimo: "2026-08-06" },
+  { username: "estadistica_samu", correo: "estadistica@samu.cl", consulta: true, modificacion: true, isAdmin: false, ultimo: "2026-08-06" },
   { username: "jroman", correo: "j.roman@samu.cl", consulta: true, modificacion: true, isAdmin: false, ultimo: "2026-08-05" },
   { username: "valarcon", correo: "v.alarcon@samu.cl", consulta: false, modificacion: false, isAdmin: false, ultimo: "2026-06-14" },
 ];
@@ -521,7 +522,7 @@ function InputConIcono({ type, style, ...props }) {
       <input ref={inputRef} type={type} className="input" {...props} style={{ paddingRight: 38, ...style }} />
       <button
         type="button"
-        aria-label={type === "time" ? "Abrir selector de hora" : "Abrir selector de fecha"}
+        aria-label={type === "time" ? "Abrir selector de hora" : type === "month" ? "Abrir selector de mes" : "Abrir selector de fecha"}
         onClick={abrirSelector}
         style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", display: "grid", placeItems: "center", width: 30, height: 30, padding: 0, border: 0, background: "transparent", color: "var(--ink-soft)", cursor: "pointer" }}
       >
@@ -945,6 +946,7 @@ function ModificarDatos({ log }) {
   };
   
   const [campo, setCampo] = useState(camposPorTipo["Traslado Primario"][0]);
+  const [movil, setMovil] = useState(MOVILES_BUZON[0]);
   const [nuevoValor, setNuevoValor] = useState("");
   const [resultado, setResultado] = useState(null);
 
@@ -960,12 +962,19 @@ function ModificarDatos({ log }) {
       <div className="disp" style={{ fontSize: 18, fontWeight: 700, marginBottom: 14 }}>Modificar datos</div>
       <div className="card" style={{ maxWidth: 480 }}>
         <label className="label">Tipo de dato</label>
-        <select className="select" value={tipo} onChange={e => { setTipo(e.target.value); setCampo(camposPorTipo[e.target.value][0]); }} style={{ marginBottom: 14 }}>
-          {Object.keys(camposPorTipo).map(t => <option key={t}>{t}</option>)}
+        <select className="select" value={tipo} onChange={e => { const nuevoTipo = e.target.value; setTipo(nuevoTipo); setCampo(camposPorTipo[nuevoTipo][0]); setFecha(nuevoTipo.startsWith("Buz") ? fecha.slice(0, 7) : fecha.length === 7 ? `${fecha}-01` : fecha); setResultado(null); }} style={{ marginBottom: 14 }}>
+          {Object.keys(camposPorTipo).filter(t => !t.startsWith("Registro")).map(t => <option key={t}>{t}</option>)}
         </select>
 
-        <label className="label">Fecha</label>
-        <InputConIcono type="date" value={fecha} onChange={e => setFecha(e.target.value)} style={{ marginBottom: 14 }} />
+        <label className="label">{tipo.startsWith("Buz") ? "Mes" : "Fecha (dd/mm/aaaa)"}</label>
+        <InputConIcono type={tipo.startsWith("Buz") ? "month" : "date"} value={fecha} onChange={e => setFecha(e.target.value)} style={{ marginBottom: 14 }} />
+
+        {tipo.startsWith("Buz") && <>
+          <label className="label">ID de móvil</label>
+          <select className="select" value={movil} onChange={e => setMovil(e.target.value)} style={{ marginBottom: 14 }}>
+            {MOVILES_BUZON.map(id => <option key={id} value={id}>{id}</option>)}
+          </select>
+        </>}
 
         <label className="label">Campo / procedimiento</label>
         <select className="select" value={campo} onChange={e => setCampo(e.target.value)} style={{ marginBottom: 14 }}>
@@ -981,7 +990,7 @@ function ModificarDatos({ log }) {
           resultado.ok ? (
             <div style={{ marginTop: 16, background: "#E4F5EC", border: "1.5px solid var(--ok)", borderRadius: 8, padding: 12, fontSize: 13 }}>
               <b>Modificación exitosa.</b><br />
-              {tipo} · {campo} · {fmtDMY(fecha)}<br />
+              {tipo} · {campo} · {tipo.startsWith("Buz") ? `Móvil ${movil} · ${fecha}` : fmtDMY(fecha)}<br />
               Valor anterior: <b>{resultado.anterior}</b> → Nuevo valor: <b>{resultado.nuevo}</b>
             </div>
           ) : (
