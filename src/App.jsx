@@ -359,7 +359,7 @@ function LoginScreen({ users, onLogin }) {
     <div className="samu-root" style={{ minHeight: 640, display: "flex", flexDirection: "column" }}>
       <div className="hazard" />
       <div style={{ position: "absolute", top: 22, left: 22, background: "#fff", borderRadius: 8, padding: 4, boxShadow: "0 2px 8px rgba(20,35,71,.15)" }}>
-        <Logo size={44} />
+        <Logo size={132} />
       </div>
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%)" }}>
         <div className="card" style={{ width: 380 }}>
