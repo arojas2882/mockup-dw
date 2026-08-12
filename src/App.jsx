@@ -1036,6 +1036,9 @@ function DashTelefonico() {
     { mes: "Marzo", 2025: 510, 2026: 1098 }, { mes: "Abril", 2025: 699, 2026: 556 },
     { mes: "Mayo", 2025: 350, 2026: 335 }, { mes: "Junio", 2025: 1080, 2026: 307 },
     { mes: "Julio", 2025: 528, 2026: 527 },
+    { mes: "Agosto", 2025: 742 }, { mes: "Septiembre", 2025: 685 },
+    { mes: "Octubre", 2025: 813 }, { mes: "Noviembre", 2025: 756 },
+    { mes: "Diciembre", 2025: 921 },
   ], []);
   const compMensual = useMemo(() => MONTHS.map((m, i) => {
     const fila = comparativoAnual[i];
